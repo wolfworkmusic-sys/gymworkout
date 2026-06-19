@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>My Gym App</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        :root {
+            --bg-dark: #121212;
+            --card-dark: #1c1c1e;
+            --accent-orange: #ff9500;
+            --text-light: #ffffff;
+            --text-gray: #aeaeae;
+            --border-color: #2c2c2e;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 60px 16px 40px 16px;
+        }
+        header { margin-bottom: 24px; }
+        h1 { font-size: 32px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px; }
+        .subtitle { color: var(--text-gray); font-size: 16px; margin: 0; }
+        
+        /* TIMER */
+        .timer-card {
+            background: var(--card-dark);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        .timer-display { font-size: 52px; font-weight: 800; font-variant-numeric: tabular-nums; margin-bottom: 16px; }
+        .timer-buttons button {
+            background: #2c2c2e; color: var(--text-light); border: none; padding: 12px 18px;
+            border-radius: 12px; font-size: 15px; font-weight: 600; margin: 0 4px; cursor: pointer;
+        }
+        .timer-buttons button.start-btn { background: var(--accent-orange); color: #000000; }
+
+        /* TABS */
+        .tabs-nav {
+            display: table; width: 100%; background: var(--card-dark);
+            border-radius: 12px; padding: 2px; margin-bottom: 24px; border: 1px solid var(--border-color);
+        }
+        .tab-btn {
+            display: table-cell; text-align: center; padding: 12px 0;
+            color: var(--text-gray); font-size: 15px; font-weight: 600; cursor: pointer; border-radius: 10px;
+        }
+        .tab-btn.active { background: #2c2c2e; color: var(--accent-orange); }
+
+        /* EXERCISE CARD */
+        .workout-section { display: none; }
+        .workout-section.active { display: block; }
+        .exercise-card {
+            background: var(--card-dark); border-radius: 20px; overflow: hidden;
+            margin-bottom: 16px; border: 1px solid var(--border-color);
+        }
+        .exercise-img { width: 100%; height: 200px; object-fit: cover; background: #2c2c2e; display: block; }
+        .exercise-info { padding: 16px; }
+        .exercise-title { font-size: 19px; font-weight: 700; margin: 0 0 10px 0; }
+        .exercise-details { font-size: 14px; color: var(--text-gray); display: flex; align-items: center; justify-content: space-between; }
+        .badge { background: #2c2c2e; padding: 4px 10px; border-radius: 8px; color: var(--accent-orange); font-weight: 700; }
+        
+        .guide-btn {
+            background: none; border: 1px solid var(--accent-orange); color: var(--accent-orange);
+            padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+
+        /* MODAL POPUP */
+        .modal {
+            display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-content {
+            background: var(--card-dark); border-radius: 24px; width: 100%; max-width: 400px;
+            padding: 24px; border: 1px solid var(--border-color); max-height: 85vh; overflow-y: auto;
+        }
+        .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 15px; color: var(--accent-orange); }
+        .diagram-box {
+            background: #121212; border-left: 4px solid var(--accent-orange);
+            padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-bottom: 15px; color: #00ff66;
+            white-space: pre-wrap;
+        }
+        .guide-text { font-size: 15px; line-height: 1.5; color: #e5e5ea; margin-bottom: 20px; }
+        .guide-text strong { color: var(--accent-orange); }
+        .close-btn {
+            width: 100%; background: #2c2c2e; color: white; border: none; padding: 12px;
+            border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>My Workout</h1>
+            <div class="subtitle">Push, Pull, Legs • Controllo CPK</div>
+        </header>
+
+        <!-- TIMER -->
+        <div class="timer-card">
+            <div id="timerDisplay" class="timer-display">01:30</div>
+            <div class="timer-buttons">
+                <button class="start-btn" onclick="toggleTimer()">Start / Pause</button>
+                <button onclick="resetTimer(90)">90s</button>
+                <button onclick="resetTimer(60)">60s</button>
+            </div>
+        </div>
+
+        <!-- TABS NAV -->
+        <div class="tabs-nav">
+            <div class="tab-btn active" id="btn-push" onclick="switchDay('push')">PUSH</div>
+            <div class="tab-btn" id="btn-pull" onclick="switchDay('pull')">PULL</div>
+            <div class="tab-btn" id="btn-legs" onclick="switchDay('legs')">LEGS</div>
+        </div>
+
+        <!-- GIORNO 1: PUSH -->
+        <div id="workout-push" class="workout-section active">
+            <div class="exercise-card">
+                <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600" class="exercise-img">
+                <div class="exercise-info">
+                    <div class="exercise-title">1. Spinte Manubri su Panca Piana</div>
+                    <div class="exercise-details">
+                        <div>S: <span class="badge">3</span> R: <span class="badge">10</span></div>
+                        <button class="guide-btn" onclick="openGuide('panca')">Guida & Diagramma</button>
+                    </div>
+                </div>
+            </div>
+            <div class="exercise-card">
+                <img src="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600" class="exercise-img">
+                <div class="exercise-info">
+                    <div class="exercise-title">2. Chest Press Macchina</div>
+                    <div class="exercise-details">
+                        <div>S: <span class="badge">3</span> R: <span class="badge">12</span></div>
+                        <button class="guide-btn" onclick="openGuide('chest')">Guida & Diagramma</button>
+                    </div>
+                </div>
+            </div>
+            <div class="exercise-card">
+                <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600" class="exercise-img">
+                <div class="exercise-info">
+                    <div class="exercise-title">3. Spinte in Alto Manubri (Seduto)</div>
+                    <div class="exercise-details">
+                        <div>S: <span class="badge">3</span> R: <span class="badge">10</span></div>
+                        <button class="guide-btn" onclick="openGuide('spalle')">Guida & Diagramma</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GIORNO 2: PULL -->
+        <div id="workout-pull" class="workout-section">
+            <div class="exercise-card">
+                <img src="https://images.unsplash.com/photo-1605296867424-35fc25c9212a?q=80&w=600" class="exercise-img">
+                <div class="exercise-info">
+                    <div class="exercise-title">1. Lat Machine Avanti</div>
+                    <div class="exercise-details">
+                        <div>S: <span class="badge">3</span> R: <span class="badge">10</span></div>
+                        <button class="guide-btn" onclick="openGuide('lat')">Guida & Diagramma</button>
+                    </div>
+                </div>
+            </div>
+            <div class="exercise-card">
+                <img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=600" class="exercise-img">
+                <div class="exercise-info">
+                    <div class="exercise-title">2. Pulley Basso</div>
+                    <div class="exercise-details">
+                        <div>S: <span class="badge">3</span> R: <span class="badge">10</span></div>
+                        <button class="guide-btn" onclick="openGuide('pulley')">Guida & Diagramma</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GIORNO 3: LEGS -->
+        <div id="workout-legs" class="workout-section">
+            <div class="exercise-card">
+                <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=600" class="exercise-img">
+                <div class="exercise-info">
+                    <div class="exercise-title">1. Leg Press</div>
+                    <div class="exercise-details">
+                        <div>S: <span class="badge">3</span> R: <span class="badge">10</span></div>
+                        <button class="guide-btn" onclick="openGuide('pressa')">Guida & Diagramma</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL POPUP PER LA GUIDA -->
+    <div id="guideModal" class="modal">
+        <div class="modal-content">
+            <div id="modalTitle" class="modal-title">Nome Esercizio</div>
+            <div id="modalDiagram" class="diagram-box">DIAGRAMMA</div>
+            <div id="modalText" class="guide-text">Istruzioni...</div>
+            <button class="close-btn" onclick="closeGuide()">Chiudi</button>
+        </div>
+    </div>
+
+    <script>
+        // Database Guide e Diagrammi
+        const guidesData = {
+            panca: {
+                title: "Spinte Manubri Panca Piana",
+                diagram: "[Manubri] \n  O  <- Testa\n /|\\ <- Gomiti a 45°\n / \\ \n[PANCA PIANA]",
+                text: "<strong>Partenza:</strong> Sdraiato, piedi ben saldi a terra. Scapole addotte (chiuse dietro).<br><br><strong>Esecuzione:</strong> Spingi i manubri verso l'alto senza farli sbattere. Nella discesa, mantieni i gomiti a circa 45° rispetto al busto (non aprirli troppo a 'T' per proteggere le spalle)."
+            },
+            chest: {
+                title: "Chest Press Macchina",
+                diagram: "[Macchina]\n  O  <- Schiena appoggiata\n [X] <- Impugnatura altezza petto\n  || ",
+                text: "<strong>Partenza:</strong> Regola il sellino in modo che le maniglie si trovino all'altezza della parte centrale del petto.<br><br><strong>Esecuzione:</strong> Spingi mantenendo le spalle incollate allo schienale. Non distendere completamente i gomiti alla fine (no lockout) per tenere la tensione sul petto."
+            },
+            spalle: {
+                title: "Spinte in Alto Manubri",
+                diagram: "   [M]   [M]\n     \\ O /\n       |  <- Busto dritto\n      / \\",
+                text: "<strong>Partenza:</strong> Seduto, schiena ben appoggiata. Manubri all'altezza delle orecchie.<br><br><strong>Esecuzione:</strong> Spingi verso l'alto disegnando una leggera curva. Fermati un attimo prima di toccare i manubri e scendi controllando il peso fino all'altezza del mento."
+            },
+            lat: {
+                title: "Lat Machine Avanti",
+                diagram: "==== SBARRA ====\n    \\  O  /\n     \\_|_/\n       |   <- Tira al petto\n      / \\",
+                text: "<strong>Partenza:</strong> Regola i rulli sulle cosce. Presa leggermente più ampia delle spalle.<br><br><strong>Esecuzione:</strong> Inclinati leggermente all'indietro con il busto. Tira la sbarra verso la parte alta del petto, guidando il movimento con i gomiti e immaginando di strizzare le scapole."
+            },
+            pulley: {
+                title: "Pulley Basso",
+                diagram: "(O)===#====== [Cavo]\n  |  <- Schiena dritta\n / \\",
+                text: "<strong>Partenza:</strong> Piedi sulle pedane, ginocchia leggermente flesse. Schiena perfettamente dritta.<br><br><strong>Esecuzione:</strong> Tira l'impugnatura verso l'ombelico. Apri il petto alla fine del movimento e contrai il dorso. Ritorna in avanti controllando il peso senza flettere la colonna."
+            },
+            pressa: {
+                title: "Leg Press",
+                diagram: "  [PEDANA] <-\n    /   \\\n  (O)---(O) <- Ginocchia a 90°\n  [SEDILE]",
+                text: "<strong>Partenza:</strong> Schiena e zona lombare completamente incollate allo schienale. Piedi larghezza spalle.<br><br><strong>Esecuzione:</strong> Sblocca la pressa e scendi lentamente finché le ginocchia non formano un angolo di circa 90°. Spingi con i talloni senza estendere le ginocchia al 100% alla fine."
+            }
+        };
+
+        // Funzioni per la Guida (Modal)
+        function openGuide(key) {
+            const data = guidesData[key];
+            if(!data) return;
+            document.getElementById('modalTitle').innerText = data.title;
+            document.getElementById('modalDiagram').innerText = data.diagram;
+            document.getElementById('modalText').innerHTML = data.text;
+            document.getElementById('guideModal').style.display = 'flex';
+        }
+        function closeGuide() {
+            document.getElementById('guideModal').style.display = 'none';
+        }
+
+        // CAMBIO SCHEDA
+        function switchDay(day) {
+            document.querySelectorAll('.workout-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('workout-' + day).classList.add('active');
+            document.getElementById('btn-' + day).classList.add('active');
+        }
+
+        // TIMER
+        let timeLeft = 90; let timerId = null;
+        const display = document.getElementById('timerDisplay');
+        function updateDisplay() {
+            const min = Math.floor(timeLeft / 60); const sec = timeLeft % 60;
+            display.textContent = min.toString().padStart(2, '0') + ':' + sec.toString().padStart(2, '0');
+        }
+        function toggleTimer() {
+            if (timerId) { clearInterval(timerId); timerId = null; } 
+            else {
+                timerId = setInterval(function() {
+                    if (timeLeft > 0) { timeLeft--; updateDisplay(); } 
+                    else {
+                        clearInterval(timerId); timerId = null;
+                        if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+                        alert("Recupero terminato! Sotto con la prossima serie!");
+                    }
+                }, 1000);
+            }
+        }
+        function resetTimer(seconds) { clearInterval(timerId); timerId = null; timeLeft = seconds; updateDisplay(); }
+    </script>
+</body>
+</html>
