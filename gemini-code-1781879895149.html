@@ -92,6 +92,7 @@
         .diagram-box {
             background: #121212; border-left: 4px solid var(--accent-orange);
             padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-bottom: 15px; color: #00ff66;
+            white-space: pre-wrap;
         }
         .guide-text { font-size: 15px; line-height: 1.5; color: #e5e5ea; margin-bottom: 20px; }
         .guide-text strong { color: var(--accent-orange); }
@@ -287,9 +288,6 @@
             }
         }
         function resetTimer(seconds) { clearInterval(timerId); timerId = null; timeLeft = seconds; updateDisplay(); }
-    </style>
-</head>
-<body>
-<!-- Il resto del corpo rimane identico e gestito dagli script -->
+    </script>
 </body>
 </html>
